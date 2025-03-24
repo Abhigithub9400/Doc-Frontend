@@ -30,3 +30,77 @@ jobs:
         # Push the images
         docker push ${{ secrets.DOCKER_HUB_USERNAME }}/$IMAGE_NAME:latest
         docker push ${{ secrets.DOCKER_HUB_USERNAME }}/$IMAGE_NAME:$TAG
+        
+        # Store the tag for deployment
+        echo "DOCKER_TAG=$TAG" >> $GITHUB_ENV
+        
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install kubectl
+      uses: azure/setup-kubectl@v3
+      
+    - name: Set up kubeconfig
+      run: |
+        mkdir -p $HOME/.kube
+        echo "${{ secrets.KUBE_CONFIG }}" > $HOME/.kube/config
+        chmod 600 $HOME/.kube/config
+    
+    - name: Deploy to Kubernetes
+      run: |
+        # Create kubernetes directory if it doesn't exist
+        mkdir -p kubernetes
+        
+        # Create deployment YAML with the correct image tag
+        cat > kubernetes/deployment.yaml << EOF
+        apiVersion: apps/v1
+        kind: Deployment
+        metadata:
+          name: docquery-app
+          labels:
+            app: docquery
+        spec:
+          replicas: 1
+          selector:
+            matchLabels:
+              app: docquery
+          template:
+            metadata:
+              labels:
+                app: docquery
+            spec:
+              containers:
+              - name: docquery
+                image: ${{ secrets.DOCKER_HUB_USERNAME }}/my-image-name:latest
+                ports:
+                - containerPort: 80
+                # No environment variables needed
+                resources:
+                  limits:
+                    cpu: "500m"
+                    memory: "512Mi"
+                  requests:
+                    cpu: "200m"
+                    memory: "256Mi"
+        ---
+        apiVersion: v1
+        kind: Service
+        metadata:
+          name: docquery-service
+        spec:
+          selector:
+            app: docquery
+          ports:
+          - port: 80
+            targetPort: 80
+          type: NodePort
+        EOF
+        
+        # Apply the deployment
+        kubectl apply -f kubernetes/deployment.yaml
+        
+        # Wait for deployment to complete
+        kubectl rollout status deployment/docquery-app
