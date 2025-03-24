@@ -58,7 +58,7 @@ WORKDIR /app
 COPY --from=build-stage /app/.output ./output
 
 # Copy Apache configuration
-COPY ci-cd/apache-config.conf /etc/apache2/sites-available/000-default.conf
+COPY DocQuery/ci-cd/apache-config.conf /etc/apache2/sites-available/000-default.conf
 
 # Create supervisor config to run both Node.js and Apache
 RUN echo "[supervisord]\nnodaemon=true\n\n[program:nodejs]\ncommand=node /app/output/server/index.mjs\ndirectory=/app\nautostart=true\nautorestart=true\nstdout_logfile=/var/log/supervisor/nodejs.log\nstderr_logfile=/var/log/supervisor/nodejs.err\n\n[program:apache2]\ncommand=/usr/sbin/apache2ctl -D FOREGROUND\nautorestart=true\nstdout_logfile=/var/log/supervisor/apache2.log\nstderr_logfile=/var/log/supervisor/apache2.err" > /etc/supervisor/conf.d/supervisord.conf
