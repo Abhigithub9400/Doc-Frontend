@@ -21,7 +21,7 @@ jobs:
         TAG=$(date +%s)
         
         # Build the image
-        docker build . --file Dockerfile --tag $IMAGE_NAME:$TAG
+        docker build . --file DocQuery/dockerfile --tag $IMAGE_NAME:$TAG
         
         # Tag with latest
         docker tag $IMAGE_NAME:$TAG ${{ secrets.DOCKER_HUB_USERNAME }}/$IMAGE_NAME:latest
