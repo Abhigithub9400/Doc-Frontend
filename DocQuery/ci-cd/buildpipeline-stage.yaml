@@ -1,0 +1,35 @@
+trigger:
+ branches:
+   include:
+     - none
+
+
+pool:
+  name: 'DQQU'
+
+variables:
+- group: dqqu-frontend-stage
+- name: variableConfiguration
+
+stages:
+- stage: "Build_Stage"
+  jobs:
+  - job: Build
+    displayName: Build
+    timeoutInMinutes: 360
+    cancelTimeoutInMinutes: 5
+    steps:
+     - task: Docker@2
+       inputs:
+         containerRegistry: 'dqqu-docker'
+         repository: '$(dockerrepo)'
+         command: 'build'
+         Dockerfile: 'DocQuery/dockerfile'
+         buildContext: '$(System.DefaultWorkingDirectory)/DocQuery'
+         arguments: '--build-arg NUXT_BASE_API_URL=$(NUXT_BASE_API_URL)'
+         
+     - task: Docker@2
+       inputs:
+         containerRegistry: 'dqqu-docker'
+         repository: '$(dockerrepo)'
+         command: 'push'

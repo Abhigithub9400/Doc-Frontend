@@ -1,0 +1,11 @@
+<template>
+  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <g id="Icon / plus">
+      <path
+        id="icon"
+        d="M19 11H13V5H11V11H5V13H11V19H13V13H19V11Z"
+        fill="currentColor"
+      />
+    </g>
+  </svg>
+</template>
