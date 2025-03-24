@@ -1,0 +1,32 @@
+name: Doc-FE
+on:
+  push:
+    branches: [ "main" ]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Log in to Docker Hub
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKER_HUB_USERNAME }}
+        password: ${{ secrets.DOCKER_HUB_TOKEN }}
+    
+    - name: Build and push Docker image
+      run: | 
+        # Set image name and tag
+        IMAGE_NAME=my-image-name
+        TAG=$(date +%s)
+        
+        # Build the image
+        docker build . --file Dockerfile --tag $IMAGE_NAME:$TAG
+        
+        # Tag with latest
+        docker tag $IMAGE_NAME:$TAG ${{ secrets.DOCKER_HUB_USERNAME }}/$IMAGE_NAME:latest
+        docker tag $IMAGE_NAME:$TAG ${{ secrets.DOCKER_HUB_USERNAME }}/$IMAGE_NAME:$TAG
+        
+        # Push the images
+        docker push ${{ secrets.DOCKER_HUB_USERNAME }}/$IMAGE_NAME:latest
+        docker push ${{ secrets.DOCKER_HUB_USERNAME }}/$IMAGE_NAME:$TAG
